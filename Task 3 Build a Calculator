@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Calculator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .calculator-container {
+      width: 100%;
+      max-width: 400px;
+      background-color: rgba(0, 0, 0, 0.8);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .header {
+      background-color: rgba(0, 0, 0, 0.9);
+      padding: 15px 20px;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    .header h1 {
+      color: #fff;
+      font-size: 1.5rem;
+      letter-spacing: 2px;
+    }
+
+    .display {
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.9);
+      text-align: right;
+    }
+
+    .previous-operand {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.2rem;
+      min-height: 24px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .current-operand {
+      color: white;
+      font-size: 2.5rem;
+      min-height: 45px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background-color: #333;
+    }
+
+    button {
+      border: none;
+      outline: none;
+      padding: 20px 10px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      background-color: #222;
+      color: white;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #333;
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+      background-color: #444;
+    }
+
+    .operator {
+      background-color: #ff9500;
+      color: white;
+    }
+
+    .operator:hover {
+      background-color: #ffaa33;
+    }
+
+    .equals {
+      background-color: #ff2d55;
+    }
+
+    .equals:hover {
+      background-color: #ff4466;
+    }
+
+    .clear,
+    .delete,
+    .percentage {
+      background-color: #a5a5a5;
+      color: black;
+    }
+
+    .clear:hover,
+    .delete:hover,
+    .percentage:hover {
+      background-color: #d9d9d9;
+    }
+
+    .span-two {
+      grid-column: span 2;
+    }
+
+    .zero {
+      border-bottom-left-radius: 20px;
+    }
+
+    .equals {
+      border-bottom-right-radius: 20px;
+    }
+
+    .keyboard-info {
+      color: rgba(255, 255, 255, 0.6);
+      text-align: center;
+      padding: 15px;
+      font-size: 0.9rem;
+      border-top: 1px solid #333;
+    }
+
+    /* Responsive design */
+    @media (max-width: 480px) {
+      button {
+        padding: 18px 8px;
+        font-size: 1.3rem;
+      }
+
+      .current-operand {
+        font-size: 2rem;
+      }
+    }
+
+    @media (max-width: 350px) {
+      button {
+        padding: 15px 5px;
+        font-size: 1.1rem;
+      }
+
+      .current-operand {
+        font-size: 1.7rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="calculator-container">
+    <div class="header">
+      <h1>Modern Calculator</h1>
+    </div>
+    <div class="display">
+      <div class="previous-operand"></div>
+      <div class="current-operand">0</div>
+    </div>
+    <div class="keypad">
+      <button class="clear operator" data-action="clear">AC</button>
+      <button class="delete operator" data-action="delete">DEL</button>
+      <button class="percentage operator" data-action="percentage">%</button>
+      <button class="operator" data-operation="÷">÷</button>
+      <button data-number="7">7</button>
+      <button data-number="8">8</button>
+      <button data-number="9">9</button>
+      <button class="operator" data-operation="×">×</button>
+      <button data-number="4">4</button>
+      <button data-number="5">5</button>
+      <button data-number="6">6</button>
+      <button class="operator" data-operation="-">−</button>
+      <button data-number="1">1</button>
+      <button data-number="2">2</button>
+      <button data-number="3">3</button>
+      <button class="operator" data-operation="+">+</button>
+      <button data-number="0" class="span-two zero">0</button>
+      <button data-number=".">.</button>
+      <button class="operator equals" data-action="equals">=</button>
+    </div>
+    <div class="keyboard-info">
+      Keyboard support: 0-9, + - * /, Enter, Backspace, Escape
+    </div>
+  </div>
+
+  <script>
+    class Calculator {
+      constructor(previousOperandElement, currentOperandElement) {
+        this.previousOperandElement = previousOperandElement;
+        this.currentOperandElement = currentOperandElement;
+        this.clear();
+      }
+
+      clear() {
+        this.currentOperand = '0';
+        this.previousOperand = '';
+        this.operation = undefined;
+      }
+
+      delete() {
+        this.currentOperand = this.currentOperand.toString().slice(0, -1);
+        if (this.currentOperand === '') {
+          this.currentOperand = '0';
+        }
+      }
+
+      appendNumber(number) {
+        if (number === '.' && this.currentOperand.includes('.')) return;
+        if (this.currentOperand === '0' && number !== '.') {
+          this.currentOperand = number.toString();
+        } else {
+          this.currentOperand = this.currentOperand.toString() + number.toString();
+        }
+      }
+
+      chooseOperation(operation) {
+        if (this.currentOperand === '') return;
+        if (this.previousOperand !== '') {
+          this.compute();
+        }
+        this.operation = operation;
+        this.previousOperand = this.currentOperand;
+        this.currentOperand = '';
+        this.currentOperand = '';
+      }
+
+      percentage() {
+        if (this.currentOperand === '') return;
+        const current = parseFloat(this.currentOperand);
+        this.currentOperand = (current / 100).toString();
+      }
+
+      compute() {
+        let computation;
+        const prev = parseFloat(this.previousOperand);
+        const current = parseFloat(this.currentOperand);
+        if (isNaN(prev) || isNaN(current)) return;
+
+        switch (this.operation) {
+          case '+':
+            computation = prev + current;
+            break;
+          case '−':
+            computation = prev - current;
+            break;
+          case '×':
+            computation = prev * current;
+            break;
+          case '÷':
+            if (current === 0) {
+              computation = 'Error';
+            } else {
+              computation = prev / current;
+            }
+            break;
+          default:
+            return;
+        }
+
+        this.currentOperand = computation.toString();
+        this.operation = undefined;
+        this.previousOperand = '';
+      }
+
+      getDisplayNumber(number) {
+        if (number === 'Error') return number;
+
+        const stringNumber = number.toString();
+        const integerDigits = parseFloat(stringNumber.split('.')[0]);
+        const decimalDigits = stringNumber.split('.')[1];
+        let integerDisplay;
+
+        if (isNaN(integerDigits)) {
+          integerDisplay = '';
+        } else {
+          integerDisplay = integerDigits.toLocaleString('en', {
+            maximumFractionDigits: 0
+          });
+        }
+
+        if (decimalDigits != null) {
+          return `${integerDisplay}.${decimalDigits}`;
+        } else {
+          return integerDisplay;
+        }
+      }
+
+      updateDisplay() {
+        this.currentOperandElement.innerText =
+          this.getDisplayNumber(this.currentOperand);
+
+        if (this.operation != null) {
+          this.previousOperandElement.innerText =
+            `${this.getDisplayNumber(this.previousOperand)} ${this.operation}`;
+        } else {
+          this.previousOperandElement.innerText = '';
+        }
+      }
+    }
+
+    // Initialize calculator
+    const previousOperandElement = document.querySelector('.previous-operand');
+    const currentOperandElement = document.querySelector('.current-operand');
+    const calculator = new Calculator(previousOperandElement, currentOperandElement);
+
+    // Button event listeners
+    document.querySelectorAll('[data-number]').forEach(button => {
+      button.addEventListener('click', () => {
+        calculator.appendNumber(button.getAttribute('data-number'));
+        calculator.updateDisplay();
+      });
+    });
+
+    document.querySelectorAll('[data-operation]').forEach(button => {
+      button.addEventListener('click', () => {
+        calculator.chooseOperation(button.getAttribute('data-operation'));
+        calculator.updateDisplay();
+      });
+    });
+
+    document.querySelector('[data-action="equals"]').addEventListener('click', () => {
+      calculator.compute();
+      calculator.updateDisplay();
+    });
+
+    document.querySelector('[data-action="clear"]').addEventListener('click', () => {
+      calculator.clear();
+      calculator.updateDisplay();
+    });
+
+    document.querySelector('[data-action="delete"]').addEventListener('click', () => {
+      calculator.delete();
+      calculator.updateDisplay();
+    });
+
+    document.querySelector('[data-action="percentage"]').addEventListener('click', () => {
+      calculator.percentage();
+      calculator.updateDisplay();
+    });
+
+    // Keyboard support
+    document.addEventListener('keydown', event => {
+      if (event.key >= 0 && event.key <= 9) {
+        calculator.appendNumber(event.key);
+        calculator.updateDisplay();
+      }
+      if (event.key === '.') {
+        calculator.appendNumber('.');
+        calculator.updateDisplay();
+      }
+      if (event.key === '+' || event.key === '-') {
+        calculator.chooseOperation(event.key === '+' ? '+' : '−');
+        calculator.updateDisplay();
+      }
+      if (event.key === '*' || event.key === 'x') {
+        calculator.chooseOperation('×');
+        calculator.updateDisplay();
+      }
+      if (event.key === '/') {
+        calculator.chooseOperation('÷');
+        calculator.updateDisplay();
+      }
+      if (event.key === 'Enter' || event.key === '=') {
+        calculator.compute();
+        calculator.updateDisplay();
+      }
+      if (event.key === 'Escape') {
+        calculator.clear();
+        calculator.updateDisplay();
+      }
+      if (event.key === 'Backspace') {
+        calculator.delete();
+        calculator.updateDisplay();
+      }
+      if (event.key === '%') {
+        calculator.percentage();
+        calculator.updateDisplay();
+      }
+    });
+  </script>
+</body>
+
+</html>
